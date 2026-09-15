@@ -151,6 +151,34 @@ export default function Home() {
           </p>
         </header>
 
+        <details className="mb-8 border border-slate-200 rounded-lg bg-white group">
+          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between">
+            Methodology — why this can score differently from other AEO checkers
+            <span className="text-slate-400 group-open:rotate-180 transition-transform">⌄</span>
+          </summary>
+          <div className="px-4 pb-4 text-sm text-slate-600 space-y-2 border-t border-slate-100 pt-3">
+            <p>
+              <span className="font-medium text-slate-800">Schema is scored by type, not just presence.</span>{" "}
+              Many checkers give full credit for any JSON-LD block. This tool only gives full
+              credit for FAQPage/Article/HowTo schema, because that's what actually makes a
+              page&apos;s content directly quotable — Organization schema tells an engine who you
+              are, not what this page answers.
+            </p>
+            <p>
+              <span className="font-medium text-slate-800">Question-heading structure is checked explicitly.</span>{" "}
+              Whether a heading is phrased as an actual question, and whether the very next
+              sentence gives a short direct answer, is one of the strongest levers for getting
+              quoted by an answer engine — and it&apos;s absent from most generic SEO/AEO scorers.
+            </p>
+            <p>
+              <span className="font-medium text-slate-800">General web-quality signals are deliberately excluded.</span>{" "}
+              Page load speed and image usage are real UX/SEO factors, but they don&apos;t affect
+              whether an AI model can extract and cite text from a page. Including them inflates
+              a score without measuring what AEO actually claims to measure.
+            </p>
+          </div>
+        </details>
+
         <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
           <input
             type="text"
