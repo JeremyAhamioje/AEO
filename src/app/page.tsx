@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AeoReport, Category } from "@/lib/analyze";
 
 // Real brand marks (Iconify's `logos` set), not stock photography --
@@ -119,7 +119,17 @@ function reportToMarkdown(report: AeoReport): string {
   return lines.join("\n");
 }
 
-function Hero() {
+function Hero({
+  url,
+  setUrl,
+  onSubmit,
+  loading,
+}: {
+  url: string;
+  setUrl: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  loading: boolean;
+}) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50 via-white to-white border-b border-slate-100">
       <div className="max-w-5xl mx-auto px-4 pt-16 pb-14 text-center">
@@ -148,6 +158,23 @@ function Hero() {
           every other answer engine — structured data, heading structure, answer
           clarity, and meta completeness.
         </p>
+
+        <form onSubmit={onSubmit} className="flex flex-col sm:flex-row gap-2 mt-7 max-w-xl mx-auto">
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="buffer.com/resources/some-post"
+            className="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-indigo-600 text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {loading ? "Analyzing…" : "Analyze"}
+          </button>
+        </form>
       </div>
     </section>
   );
@@ -277,6 +304,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<AeoReport | null>(null);
   const [copied, setCopied] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -284,6 +312,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setReport(null);
+    resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -312,27 +341,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Hero />
+      <Hero url={url} setUrl={setUrl} onSubmit={handleSubmit} loading={loading} />
       <Methodology />
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <form onSubmit={handleSubmit} className="flex gap-2 mb-8">
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="buffer.com/resources/some-post"
-            className="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-indigo-600 text-white rounded-lg px-5 py-2.5 text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Analyzing…" : "Analyze"}
-          </button>
-        </form>
-
+      <div ref={resultsRef} className="max-w-3xl mx-auto px-4 py-12 scroll-mt-6">
         {error && (
           <div className="border border-rose-200 bg-rose-50 text-rose-700 text-sm rounded-lg px-4 py-3 mb-8">
             {error}
