@@ -37,6 +37,49 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+export class AeoAnalyzeError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function normalizeUrl(input: string): string {
+  const trimmed = input.trim();
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+}
+
+// Shared by the API route and the /report page's server component so both
+// validate and score a URL the exact same way.
+export async function analyzeUrl(input: string): Promise<AeoReport> {
+  if (!input || typeof input !== "string") {
+    throw new AeoAnalyzeError("Missing url.", 400);
+  }
+  const url = normalizeUrl(input);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new AeoAnalyzeError("That doesn't look like a valid URL.", 400);
+  }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new AeoAnalyzeError("Only http/https URLs are supported.", 400);
+  }
+
+  try {
+    const { html } = await fetchHtml(url);
+    return analyzeHtml(url, html);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to fetch or analyze that URL.";
+    throw new AeoAnalyzeError(message, 502);
+  }
+}
+
 export async function fetchHtml(url: string): Promise<{ html: string; status: number }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
